@@ -22,10 +22,11 @@ class RoomController extends Controller
         $terms = AccommodationSchedule::where('room_id', $id)
             ->select('date_from', 'date_to')
             ->groupBy('date_from', 'date_to')
+            ->orderBy('date_from')
             ->get()
             ->toArray();
 
-        $tab = [
+        $result = [
             'available' => array(),
             'unavailable' => array(),
         ];
@@ -50,12 +51,12 @@ class RoomController extends Controller
                 }
             }
 
-            $tab[$type][] = [
+            $result[$type][] = [
                 'from' => date("Y-m-d", strtotime($term['date_from'])),
                 'to' => $term['date_to'] ? date("Y-m-d", strtotime($term['date_to'])) : null,
             ];
         }
 
-        dd($tab);
+        return view('rooms.show',['result' => $result]);
     }
 }

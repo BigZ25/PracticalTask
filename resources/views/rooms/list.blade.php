@@ -1,5 +1,5 @@
 <style>
-    table, tr ,td{
+    table, tr ,td, th{
         border: 1px solid black;
     }
 
