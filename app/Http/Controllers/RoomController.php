@@ -25,7 +25,10 @@ class RoomController extends Controller
             ->get()
             ->toArray();
 
-        $tab = array();
+        $tab = [
+            'available' => array(),
+            'unavailable' => array(),
+        ];
 
         foreach ($terms as $term) {
 
