@@ -57,7 +57,6 @@ class RoomController extends Controller
                     ->havingRaw('count(*) = ' . $roomMaxTenants)
                     ->first();
 
-
                 if ($tmp != null) {
 
                     $from = date("Y-m-d", strtotime($tmp->date_from));
@@ -71,7 +70,10 @@ class RoomController extends Controller
                         $result['unavailable'][] = $row;
                     }
                 } else {
-                    //TODO: dostępne terminy
+                    $result['available'][] = [
+                        'from' => date("Y-m-d", strtotime($term['date_from'])),
+                        'to' => date("Y-m-d", strtotime($term['date_to'])),
+                    ];
                 }
 
             } else {
