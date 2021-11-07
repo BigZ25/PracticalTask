@@ -14,5 +14,5 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',[RoomController::class,'index']);
-Route::get('/rooms/show/{id}',[RoomController::class,'show'])->name('rooms.show');
+Route::get('/', [RoomController::class, 'index']);
+Route::get('/rooms/show/{id}', [RoomController::class, 'show'])->name('rooms.show');

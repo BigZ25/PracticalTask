@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AccommodationSchedule;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RoomController extends Controller
 {
@@ -17,10 +18,10 @@ class RoomController extends Controller
 
     public function show(int $id)
     {
-        $room = Room::find($id);
+        $roomMaxTenants = Room::find($id)->max_tenants;
 
         $terms = AccommodationSchedule::where('room_id', $id)
-            ->select('date_from', 'date_to')
+            ->selectRaw('date_from, if(date_to is null,date_add(date_from,interval 2 year),date_to) as date_to, count(*) as tenants')
             ->groupBy('date_from', 'date_to')
             ->orderBy('date_from')
             ->get()
@@ -31,32 +32,57 @@ class RoomController extends Controller
             'unavailable' => array(),
         ];
 
-        foreach ($terms as $term) {
+        foreach ($terms as $i => $term) {
 
-            if ($room->max_tenants == 1) {
-                $type = 'unavailable';
-            } else {
-                if ($term['date_to'] == null)
-                    $type = 'unavailable';
-                else {
-                    $counter = AccommodationSchedule::where('room_id', $id)
-                        ->where('date_from', $term['date_from'])
-                        ->where('date_to', $term['date_to'])
-                        ->count();
+            if ($term['tenants'] < $roomMaxTenants) {
 
-                    if ($room->max_tenants > $counter)
-                        $type = 'available';
-                    else
-                        $type = 'unavailable';
+                $tmp = AccommodationSchedule::selectRaw('max(date_from) as date_from, min(date_to) as date_to')
+                    ->where('room_id', $id)
+                    ->where(function ($query) use ($term) {
+                        $query->where(function ($query) use ($term) {
+                            $query->where('date_from', '<=', $term['date_from'])
+                                ->where('date_to', '>=', $term['date_to']);
+                        })
+                            ->orWhere(function ($query) use ($term) {
+                                $query->where('date_from', '<=', $term['date_from'])
+                                    ->where('date_to', '<=', $term['date_to'])
+                                    ->where('date_to', '>=', $term['date_from']);
+                            })
+                            ->orWhere(function ($query) use ($term) {
+                                $query->where('date_from', '>=', $term['date_from'])
+                                    ->where('date_to', '>=', $term['date_to'])
+                                    ->where('date_from', '<=', $term['date_to']);
+                            });
+                    })
+                    ->havingRaw('count(*) = ' . $roomMaxTenants)
+                    ->first();
+
+
+                if ($tmp != null) {
+
+                    $from = date("Y-m-d", strtotime($tmp->date_from));
+                    $to = date("Y-m-d", strtotime($tmp->date_to));
+
+                    $row = compact('from', 'to');
+
+                    $inArray = in_array($row, $result['unavailable']);
+
+                    if (!$inArray) {
+                        $result['unavailable'][] = $row;
+                    }
+                } else {
+                    //TODO: dostępne terminy
                 }
+
+            } else {
+                $result['unavailable'][] = [
+                    'from' => date("Y-m-d", strtotime($term['date_from'])),
+                    'to' => date("Y-m-d", strtotime($term['date_to'])),
+                ];
             }
 
-            $result[$type][] = [
-                'from' => date("Y-m-d", strtotime($term['date_from'])),
-                'to' => $term['date_to'] ? date("Y-m-d", strtotime($term['date_to'])) : null,
-            ];
         }
 
-        return view('rooms.show',['result' => $result]);
+        return view('rooms.show', ['result' => $result]);
     }
 }
