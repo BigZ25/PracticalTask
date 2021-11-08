@@ -70,14 +70,6 @@ class RoomController extends Controller
                         $result['unavailable'][] = $row;
                     }
 
-//                    if ($from != $term['date_from']) {
-//
-//                    } else {
-//                        if ($to != $term['date_to']) {
-//
-//                        }
-//                    }
-
                 } else {
                     $result['available'][] = [
                         'from' => date("Y-m-d", strtotime($term['date_from'])),
