@@ -69,6 +69,15 @@ class RoomController extends Controller
                     if (!$inArray) {
                         $result['unavailable'][] = $row;
                     }
+
+//                    if ($from != $term['date_from']) {
+//
+//                    } else {
+//                        if ($to != $term['date_to']) {
+//
+//                        }
+//                    }
+
                 } else {
                     $result['available'][] = [
                         'from' => date("Y-m-d", strtotime($term['date_from'])),
@@ -84,6 +93,27 @@ class RoomController extends Controller
             }
 
         }
+
+        for ($i = 0; $i < count($result['unavailable']) - 1; $i++) {
+
+            $from = strtotime($result['unavailable'][$i + 1]['from']);
+            $to = strtotime($result['unavailable'][$i]['to']);
+
+            if ($from - $to > 1) {
+                $result['available'][] = [
+                    'from' => date("Y-m-d", $to),
+                    'to' => date("Y-m-d", $from),
+                ];
+            }
+        }
+
+        usort($result['available'], function ($item1, $item2) {
+            return $item1['from'] <=> $item2['from'];
+        });
+
+        usort($result['unavailable'], function ($item1, $item2) {
+            return $item1['from'] <=> $item2['from'];
+        });
 
         return view('rooms.show', ['result' => $result]);
     }
