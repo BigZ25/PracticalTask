@@ -89,7 +89,7 @@ class RoomController extends Controller
             $from = strtotime($result['unavailable'][$i + 1]['from'] . ' - 1 day');
             $to = strtotime($result['unavailable'][$i]['to'] . ' + 1 day');
 
-            if ($from - $to > 1) {
+            if ($from - $to > 86400) {
                 $result['available'][] = [
                     'from' => date("Y-m-d", $to),
                     'to' => date("Y-m-d", $from),
