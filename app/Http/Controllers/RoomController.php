@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\AccommodationSchedule;
 use App\Models\Room;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class RoomController extends Controller
 {
@@ -21,7 +19,7 @@ class RoomController extends Controller
         $roomMaxTenants = Room::find($id)->max_tenants;
 
         $terms = AccommodationSchedule::where('room_id', $id)
-            ->selectRaw('date_from, if(date_to is null,date_add(date_from,interval 2 year),date_to) as date_to, count(*) as tenants')
+            ->selectRaw('date_from, date_to, count(*) as tenants')
             ->groupBy('date_from', 'date_to')
             ->orderBy('date_from')
             ->get()
@@ -34,7 +32,7 @@ class RoomController extends Controller
 
         foreach ($terms as $i => $term) {
 
-            if ($term['tenants'] < $roomMaxTenants) {
+            if ($term['tenants'] < $roomMaxTenants && $term['date_to'] != null) {
 
                 $tmp = AccommodationSchedule::selectRaw('max(date_from) as date_from, min(date_to) as date_to')
                     ->where('room_id', $id)
@@ -80,7 +78,7 @@ class RoomController extends Controller
             } else {
                 $result['unavailable'][] = [
                     'from' => date("Y-m-d", strtotime($term['date_from'])),
-                    'to' => date("Y-m-d", strtotime($term['date_to'])),
+                    'to' => date("Y-m-d", strtotime($term['date_to'] ?? $term['date_from']. ' + 2 year')),
                 ];
             }
 
