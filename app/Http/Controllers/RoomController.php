@@ -86,8 +86,8 @@ class RoomController extends Controller
 
         for ($i = 0; $i < count($result['unavailable']) - 1; $i++) {
 
-            $from = strtotime($result['unavailable'][$i + 1]['from']);
-            $to = strtotime($result['unavailable'][$i]['to']);
+            $from = strtotime($result['unavailable'][$i + 1]['from'] . ' - 1 day');
+            $to = strtotime($result['unavailable'][$i]['to'] . ' + 1 day');
 
             if ($from - $to > 1) {
                 $result['available'][] = [
